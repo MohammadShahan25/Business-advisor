@@ -61,9 +61,11 @@ const createInitialPrompt = (
 };
 
 
+/*
 export const config = {
-  runtime: 'edge', // Vercel Edge Function for speed and streaming
+  runtime: 'edge', // Vercel Edge Function for speed and streaming. This is commented out to fix a build error as @google/genai is not fully compatible with the edge runtime.
 };
+*/
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {

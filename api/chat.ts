@@ -1,5 +1,5 @@
 import { GoogleGenAI, type Content } from "@google/genai";
-import type { FinancialData, CalculationResult } from '../types';
+import type { FinancialData, CalculationResult, ChatMessage } from '../types';
 
 // This function is now on the server to securely generate the prompt
 const createInitialPrompt = (
@@ -73,7 +73,13 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { history, financialData, calculationResult, currency, location } = await req.json();
+    const { history, financialData, calculationResult, currency, location }: {
+      history: ChatMessage[];
+      financialData?: FinancialData;
+      calculationResult?: CalculationResult;
+      currency: string;
+      location: string;
+    } = await req.json();
 
     if (!process.env.API_KEY) {
       return new Response(JSON.stringify({ error: "API key not configured on the server" }), { status: 500 });
@@ -81,8 +87,8 @@ export default async function handler(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    const contents: Content[] = history.map((msg: { role: string; content: string }) => ({
-      role: msg.role === 'model' ? 'model' : 'user',
+    const contents: Content[] = history.map((msg: ChatMessage) => ({
+      role: msg.role,
       parts: [{ text: msg.content }],
     }));
 

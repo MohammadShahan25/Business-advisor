@@ -1,9 +1,8 @@
 
-import React, { useState, useCallback, FC, ReactNode, FormEvent, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import * as htmlToImage from 'html-to-image';
-import type { FinancialData, CalculationResult, ChatMessage, ChartData } from './types';
 
 // --- Merged from geminiService.ts ---
 const getAiStream = async ({
@@ -13,13 +12,13 @@ const getAiStream = async ({
     currency,
     location,
 }: {
-    history: ChatMessage[];
-    financialData?: FinancialData;
-    calculationResult?: CalculationResult;
-    currency: string;
-    location: string;
-}): Promise<ReadableStream<Uint8Array>> => {
-  const payload: any = { history, currency, location };
+    history: any;
+    financialData?: any;
+    calculationResult?: any;
+    currency: any;
+    location: any;
+}) => {
+  const payload: Record<string, any> = { history, currency, location };
   if (financialData && calculationResult) {
     payload.financialData = financialData;
     payload.calculationResult = calculationResult;
@@ -48,16 +47,7 @@ const getAiStream = async ({
 
 // --- Helper Components & Icons (New Themed Icons) ---
 
-interface InputFieldProps {
-  label: string;
-  id: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  icon?: React.ReactNode;
-  type?: string;
-}
-
-const InputField: FC<InputFieldProps> = ({ label, id, value, onChange, icon, type = 'number' }) => (
+const InputField = ({ label, id, value, onChange, icon, type = 'number' }: { label: any; id: any; value: any; onChange: any; icon?: React.ReactNode; type?: string; }) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-stone-700 mb-1">
       {label}
@@ -82,7 +72,7 @@ const InputField: FC<InputFieldProps> = ({ label, id, value, onChange, icon, typ
   </div>
 );
 
-const InputGroup: FC<{ title: string, children: ReactNode }> = ({ title, children }) => (
+const InputGroup = ({ title, children }) => (
   <fieldset className="border border-stone-200 p-4 rounded-lg">
     <legend className="text-base font-semibold text-brand-dark px-2">{title}</legend>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
@@ -91,20 +81,20 @@ const InputGroup: FC<{ title: string, children: ReactNode }> = ({ title, childre
   </fieldset>
 );
 
-const IconLock: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>;
-const IconArrowLeft: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>;
-const IconSwitch: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>;
-const IconUsers: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.125-1.274-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.125-1.274.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
-const IconMarketing: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.464 9.168-6M2 12h2" /></svg>;
-const IconExclamation: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
-const IconSend: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>;
-const IconAdvisor: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-brand-primary-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
-const IconReport: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
-const IconShare: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg>;
-const IconCommission: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zm0 14h.01M7 17h5a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2zM15 3h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2V5a2 2 0 012-2zm0 14h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
-const IconPackaging: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
-const IconStar: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
-const IconReceipt: FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+const IconLock = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>;
+const IconArrowLeft = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>;
+const IconSwitch = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>;
+const IconUsers = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.125-1.274-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.125-1.274.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
+const IconMarketing = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.464 9.168-6M2 12h2" /></svg>;
+const IconExclamation = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
+const IconSend = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>;
+const IconAdvisor = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-brand-primary-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
+const IconReport = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
+const IconShare = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg>;
+const IconCommission = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zm0 14h.01M7 17h5a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2zM15 3h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2V5a2 2 0 012-2zm0 14h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z" /></svg>
+const IconPackaging = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
+const IconStar = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+const IconReceipt = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
 
 const EXPENSE_COLORS = ['#f59e0b', '#78716c', '#10b981', '#d97706', '#a3e635', '#f472b6', '#ef4444'];
 const REVENUE_COLORS = ['#f59e0b', '#fbbf24'];
@@ -126,18 +116,18 @@ const initialInputsState = {
   operational: { outdoorOrders: '', avgRating: '' },
 };
 
-const App: FC = () => {
+const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   
   const [inputs, setInputs] = useState(initialInputsState);
   const [selectedCurrency, setSelectedCurrency] = useState('INR');
-  const [result, setResult] = useState<CalculationResult | null>(null);
-  const [expenseChartData, setExpenseChartData] = useState<ChartData[]>([]);
-  const [revenueChartData, setRevenueChartData] = useState<ChartData[]>([]);
-  const [maintenanceChartData, setMaintenanceChartData] = useState<ChartData[]>([]);
+  const [result, setResult] = useState(null);
+  const [expenseChartData, setExpenseChartData] = useState([]);
+  const [revenueChartData, setRevenueChartData] = useState([]);
+  const [maintenanceChartData, setMaintenanceChartData] = useState([]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -146,16 +136,16 @@ const App: FC = () => {
   const [copySuccessMessage, setCopySuccessMessage] = useState('');
 
   // Chat state - The history is now the single source of truth for the conversation
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef(null);
 
   // Refs for charts
-  const summaryRef = useRef<HTMLDivElement>(null);
-  const expenseChartRef = useRef<HTMLDivElement>(null);
-  const revenueChartRef = useRef<HTMLDivElement>(null);
-  const maintenanceChartRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef(null);
+  const expenseChartRef = useRef(null);
+  const revenueChartRef = useRef(null);
+  const maintenanceChartRef = useRef(null);
   
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -170,7 +160,7 @@ const App: FC = () => {
     }
   }, [copySuccessMessage]);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = (e) => {
     e.preventDefault();
     if (password === CORRECT_PASSWORD) {
       setIsAuthenticated(true);
@@ -181,21 +171,21 @@ const App: FC = () => {
     }
   };
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     const keys = name.split('.');
     if (keys.length === 2) {
-      const [category, field] = keys as [keyof FinancialData, string];
+      const [category, field] = keys;
       setInputs(prev => ({
         ...prev,
-        [category]: { ...(prev[category] as object), [field]: value }
+        [category]: { ...(prev[category]), [field]: value }
       }));
     } else {
       setInputs(prev => ({ ...prev, [name]: value }));
     }
   }, []);
 
-  const handleSelectLocation = (location: string) => {
+  const handleSelectLocation = (location) => {
     setSelectedLocation(location);
     const presetRent = location === 'Udaipur' ? '56817' : location === 'Ahmedabad' ? '90000' : '';
     setInputs({ ...initialInputsState, maintenance: { ...initialInputsState.maintenance, rent: presetRent } });
@@ -217,12 +207,15 @@ const App: FC = () => {
       setPassword('');
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedCurrency, minimumFractionDigits: 2 }).format(value);
   }
   
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.05) return null;
+  const renderCustomizedLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    if (percent === undefined || percent < 0.05 || cx === undefined || cy === undefined || midAngle === undefined || innerRadius === undefined || outerRadius === undefined) {
+      return null;
+    }
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
     const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
@@ -235,7 +228,7 @@ const App: FC = () => {
   };
   
   // Generic function to handle streaming AI responses
-  const processStream = async (stream: ReadableStream<Uint8Array>) => {
+  const processStream = async (stream) => {
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let reading = true;
@@ -264,9 +257,9 @@ const App: FC = () => {
     setChatHistory([]);
     setIsLoading(true);
 
-    const parse = (val: string) => parseFloat(val) || 0;
+    const parse = (val) => parseFloat(val) || 0;
     
-    const financialData: FinancialData = {
+    const financialData = {
       revenue: { dineIn: parse(inputs.revenue.dineIn), outdoor: parse(inputs.revenue.outdoor) },
       maintenance: { electricity: parse(inputs.maintenance.electricity), rent: parse(inputs.maintenance.rent), repairs: parse(inputs.maintenance.repairs) },
       foodCosts: { local: parse(inputs.foodCosts.local), pune: parse(inputs.foodCosts.pune) },
@@ -304,7 +297,7 @@ const App: FC = () => {
     setMaintenanceChartData([ { name: 'Electricity', value: financialData.maintenance.electricity }, { name: 'Rent', value: financialData.maintenance.rent }, { name: 'Repairs', value: financialData.maintenance.repairs }, ].filter(item => item.value > 0));
 
     // Start the AI chat
-    const initialUserMessage: ChatMessage = { role: 'user', content: "Initial analysis request" };
+    const initialUserMessage = { role: 'user', content: "Initial analysis request" };
     const currentHistory = [initialUserMessage];
     setChatHistory(currentHistory); // Show user message placeholder
     setChatHistory(prev => [...prev, {role: 'model', content: ''}]); // Add empty model message to populate
@@ -318,7 +311,7 @@ const App: FC = () => {
           location: selectedLocation,
       });
       await processStream(stream);
-    } catch (e: any) {
+    } catch (e) {
       setError(e.message || "An unknown error occurred.");
       setChatHistory([]); // Clear history on error
     } finally {
@@ -326,11 +319,11 @@ const App: FC = () => {
     }
   }, [inputs, selectedCurrency, selectedLocation]);
   
-  const handleSendChatMessage = async (e: FormEvent) => {
+  const handleSendChatMessage = async (e) => {
     e.preventDefault();
     if (!chatMessage.trim() || isChatLoading) return;
     
-    const newUserMessage: ChatMessage = { role: 'user', content: chatMessage };
+    const newUserMessage = { role: 'user', content: chatMessage };
     const currentHistory = [...chatHistory, newUserMessage];
     
     setChatHistory(currentHistory);
@@ -339,9 +332,9 @@ const App: FC = () => {
     setChatHistory(prev => [...prev, {role: 'model', content: ''}]); // Add empty model message
 
     try {
-        const stream = await getAiStream({ history: currentHistory, currency: selectedCurrency, location: selectedLocation! });
+        const stream = await getAiStream({ history: currentHistory, currency: selectedCurrency, location: selectedLocation });
         await processStream(stream);
-    } catch (e: any) {
+    } catch (e) {
         setChatHistory(prev => {
             const newHistory = [...prev];
             newHistory[newHistory.length - 1].content = `Sorry, I encountered an error: ${e.message}`;
@@ -369,7 +362,7 @@ AI Advisor Recommendations:
 ${firstModelMessage.replace(/<br \/>/g, '\n').replace(/<[^>]*>/g, '')}
         `.trim();
 
-        const dataUrlToFile = async (dataUrl: string, fileName: string): Promise<File> => {
+        const dataUrlToFile = async (dataUrl, fileName) => {
             const res = await fetch(dataUrl);
             const blob = await res.blob();
             return new File([blob], fileName, { type: 'image/png' });
@@ -377,7 +370,7 @@ ${firstModelMessage.replace(/<br \/>/g, '\n').replace(/<[^>]*>/g, '')}
 
         if (navigator.share && navigator.canShare) {
             try {
-                const files: File[] = [];
+                const files = [];
                 const chartsToCapture = [ { ref: revenueChartRef, name: 'revenue-breakdown.png' }, { ref: maintenanceChartRef, name: 'maintenance-breakdown.png' }, { ref: expenseChartRef, name: 'expense-distribution.png' }, ];
 
                 for (const chart of chartsToCapture) {
@@ -430,7 +423,7 @@ ${firstModelMessage.replace(/<br \/>/g, '\n').replace(/<[^>]*>/g, '')}
   }
 
   const profitLossColor = result && result.profitOrLoss >= 0 ? 'text-accent-green' : 'text-accent-loss';
-  const renderMarkdown = (text: string) => {
+  const renderMarkdown = (text) => {
     return text.replace(/\n/g, '<br />').replace(/\* /g, '• ').replace(/##\s?(.*?)<br \/>/g, '<h4 class="font-semibold my-2">$1</h4>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   };
 
@@ -517,11 +510,11 @@ ${firstModelMessage.replace(/<br \/>/g, '\n').replace(/<[^>]*>/g, '')}
                </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {revenueChartData.length > 0 && <div ref={revenueChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4 text-center">Revenue Breakdown</h3><div style={{ width: '100%', height: 250 }}><ResponsiveContainer><PieChart><Pie data={revenueChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={renderCustomizedLabel}>{revenueChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={REVENUE_COLORS[index % REVENUE_COLORS.length]} />)}</Pie><Tooltip formatter={(value: number) => [formatCurrency(value), 'Amount']} /><Legend /></PieChart></ResponsiveContainer></div></div>}
-                {maintenanceChartData.length > 0 && <div ref={maintenanceChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4 text-center">Maintenance Breakdown</h3><div style={{ width: '100%', height: 250 }}><ResponsiveContainer><PieChart><Pie data={maintenanceChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} >{maintenanceChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={MAINT_COLORS[index % MAINT_COLORS.length]} />)}</Pie><Tooltip formatter={(value: number) => [formatCurrency(value), 'Cost']} /><Legend wrapperStyle={{fontSize: "14px"}}/></PieChart></ResponsiveContainer></div></div>}
+                {revenueChartData.length > 0 && <div ref={revenueChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4 text-center">Revenue Breakdown</h3><div style={{ width: '100%', height: 250 }}><ResponsiveContainer><PieChart><Pie data={revenueChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={renderCustomizedLabel}>{revenueChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={REVENUE_COLORS[index % REVENUE_COLORS.length]} />)}</Pie><Tooltip formatter={(value) => [formatCurrency(value), 'Amount']} /><Legend /></PieChart></ResponsiveContainer></div></div>}
+                {maintenanceChartData.length > 0 && <div ref={maintenanceChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4 text-center">Maintenance Breakdown</h3><div style={{ width: '100%', height: 250 }}><ResponsiveContainer><PieChart><Pie data={maintenanceChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} >{maintenanceChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={MAINT_COLORS[index % MAINT_COLORS.length]} />)}</Pie><Tooltip formatter={(value) => [formatCurrency(value), 'Cost']} /><Legend wrapperStyle={{fontSize: "14px"}}/></PieChart></ResponsiveContainer></div></div>}
             </div>
               
-            {expenseChartData.length > 0 && <div ref={expenseChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4">Total Expense Distribution</h3><div style={{ width: '100%', height: 300 }}><ResponsiveContainer><BarChart data={expenseChartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}><XAxis dataKey="name" /><YAxis tickFormatter={(value) => formatCurrency(Number(value))} width={80}/><Tooltip formatter={(value: number) => [formatCurrency(value), 'Cost']} /><Legend /><Bar dataKey="value" name="Expenses">{expenseChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />)}</Bar></BarChart></ResponsiveContainer></div></div>}
+            {expenseChartData.length > 0 && <div ref={expenseChartRef} className="bg-white p-6 sm:p-8 rounded-xl shadow-lg"><h3 className="text-xl font-semibold text-stone-800 mb-4">Total Expense Distribution</h3><div style={{ width: '100%', height: 300 }}><ResponsiveContainer><BarChart data={expenseChartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}><XAxis dataKey="name" /><YAxis tickFormatter={(value) => formatCurrency(Number(value))} width={80}/><Tooltip formatter={(value) => [formatCurrency(value), 'Cost']} /><Legend /><Bar dataKey="value" name="Expenses">{expenseChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />)}</Bar></BarChart></ResponsiveContainer></div></div>}
 
             {(isLoading || chatHistory.length > 0) && (
               <div className="bg-brand-secondary rounded-xl shadow-lg flex flex-col">

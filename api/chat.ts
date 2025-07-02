@@ -1,17 +1,16 @@
-import { GoogleGenAI, type Content } from "@google/genai";
-import type { FinancialData, CalculationResult, ChatMessage } from '../types';
+import { GoogleGenAI } from "@google/genai";
 
 // This function is now on the server to securely generate the prompt
 const createInitialPrompt = (
-  financialData: FinancialData,
-  calculationResult: CalculationResult,
-  currency: string,
-  location: string
-): string => {
+  financialData,
+  calculationResult,
+  currency,
+  location
+) => {
   const { revenue, maintenance, foodCosts, staffing, platformFees, packaging, marketing, misc, operational } = financialData;
   const { profitOrLoss, totalRevenue } = calculationResult;
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
   }
 
@@ -67,19 +66,13 @@ export const config = {
 };
 */
 
-export default async function handler(req: Request) {
+export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
   }
 
   try {
-    const { history, financialData, calculationResult, currency, location }: {
-      history: ChatMessage[];
-      financialData?: FinancialData;
-      calculationResult?: CalculationResult;
-      currency: string;
-      location: string;
-    } = await req.json();
+    const { history, financialData, calculationResult, currency, location } = await req.json();
 
     if (!process.env.API_KEY) {
       return new Response(JSON.stringify({ error: "API key not configured on the server" }), { status: 500 });
@@ -87,7 +80,7 @@ export default async function handler(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    const contents: Content[] = history.map((msg: ChatMessage) => ({
+    const contents = history.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.content }],
     }));
@@ -124,7 +117,7 @@ export default async function handler(req: Request) {
       headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' },
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in API route:', error);
     return new Response(JSON.stringify({ error: error.message || "An internal server error occurred." }), { status: 500 });
   }
